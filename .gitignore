@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+evidence/*
+!evidence/.gitkeep
+.env
+.env.*
+!.env.example
+*.log
+workspace/*
+!workspace/AGENTS.md
+!workspace/sample.txt

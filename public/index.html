@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>开控 · Codex 无鼠标原型</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script></head>
+<body>
+  <a class="skip" href="#draft">跳到任务输入</a>
+  <header class="page-header"><div><p class="eyebrow">本机运行 · v0.1 原型</p><h1>开控</h1><p>用键盘完成一次 Codex 任务</p></div><span id="mode-badge" class="badge">练习模式</span></header>
+  <main>
+    <section class="card setup" aria-labelledby="setup-title">
+      <h2 id="setup-title">开始前</h2>
+      <div class="setup-row"><label for="mode">任务模式</label><select id="mode" data-nav><option value="practice">练习：不调用模型</option><option value="codex">真实 Codex：发送到已登录服务</option></select><button id="connect" data-nav>检查 Codex 连接</button><button id="disconnect" data-nav>关闭 Codex 连接</button></div>
+      <p id="mode-description">练习只回显草稿并演练授权、停止和查看结果，不会执行你的要求。</p>
+      <p class="small">Tab 切换控件，Enter 执行按钮。也可用 F6 逐项定位、F7 执行、F8 查看结果、F9 返回输入；Esc 停止任务。输入框中的 Enter 只换行。功能键可能需要 Fn。</p>
+      <p id="connection" class="small">尚未连接 Codex。练习模式不需要登录。</p>
+      <details><summary>单键扫描与测试目录</summary>
+        <p>开启后，控件会逐项高亮；按空格执行当前项。文字输入时扫描暂停。可用系统听写填写草稿，听写兼容性尚待实测。</p>
+        <div class="setup-row"><label for="scan-speed">扫描间隔</label><select id="scan-speed" data-nav><option value="2400">2.4 秒</option><option value="4000">4 秒</option><option value="6000">6 秒</option></select><button id="scan-toggle" data-nav aria-pressed="false">开启单键扫描</button></div>
+        <p id="workspace" class="path"></p><p class="small">真实模式固定使用此自制测试目录。目录内操作不一定逐次询问；需要额外授权时会显示原始请求。不会把策略改为完全访问。目录沙箱主要约束写入，尚未实现完整的读取隔离，请只使用自制样本。</p>
+      </details>
+    </section>
+
+    <div class="workspace-grid">
+      <section class="card" aria-labelledby="draft-title">
+        <div class="section-head"><h2 id="draft-title">1. 写下任务</h2><span id="char-count" class="small">0 / 12000</span></div>
+        <label class="sr-only" for="draft">任务草稿</label>
+        <textarea id="draft" data-nav rows="8" maxlength="12000" aria-describedby="draft-help" placeholder="例如：读取 sample.txt，告诉我里面写了什么。"></textarea>
+        <p id="draft-help" class="small">可以键盘输入或使用系统听写。草稿不会自动发送。</p>
+        <div class="actions"><button id="example" data-nav>填入练习句</button><button id="undo" data-nav>撤销修改</button><button id="delete-last" data-nav>删除上一句</button><button id="clear" data-nav>清空草稿</button></div>
+        <fieldset class="correction"><legend>按文字纠错</legend><label for="find">查找</label><input id="find" data-nav type="text" autocomplete="off"><label for="replacement">改成</label><input id="replacement" data-nav type="text" autocomplete="off"><button id="replace" data-nav>替换首处</button></fieldset>
+        <div class="primary-actions"><button id="review" class="primary" data-nav>检查草稿并发送</button><button id="edit-done" data-nav>完成编辑，继续定位</button></div>
+      </section>
+
+      <section class="card task" aria-labelledby="task-title">
+        <h2 id="task-title">2. 检查与控制</h2>
+        <div class="status-box"><span id="phase" class="status-label">未开始</span><p id="progress" role="status" aria-live="polite" aria-atomic="true">先写下想做的事。</p></div>
+        <p id="notice" role="status" aria-live="polite" class="notice"></p>
+        <p id="error" role="alert" class="error" hidden></p>
+        <section id="review-panel" class="approval" aria-labelledby="review-title" hidden>
+          <h3 id="review-title" tabindex="-1">发送前检查</h3><p id="review-scope"></p><pre id="review-text" tabindex="0" data-nav></pre>
+          <div class="actions"><button id="back-edit" data-nav>返回修改</button><button id="confirm-send" class="primary" data-nav>授权并发送这份草稿</button></div>
+        </section>
+        <section id="approval-panel" class="approval" aria-labelledby="approval-title" hidden>
+          <h3 id="approval-title" tabindex="-1">等待授权</h3><pre id="approval-details" tabindex="0" data-nav></pre>
+          <div class="actions"><button id="decline" data-nav>拒绝本次</button><button id="accept" data-nav>允许本次</button></div><p class="small">没有倒计时，不选择就不会自动同意。</p>
+        </section>
+        <div class="primary-actions"><button id="stop" class="stop" data-nav disabled>停止任务 · Esc</button><button id="view-result" data-nav>定位到结果</button></div>
+        <p class="small">停止任务不会自动撤销已完成的修改。关闭连接后，仍需核对任务最终状态。</p>
+        <details><summary>本次操作记录</summary><ol id="trace"></ol></details>
+      </section>
+    </div>
+
+    <section class="card result-card" aria-labelledby="result-title"><div class="section-head"><h2 id="result-title">3. 查看结果</h2><span id="result-source" class="small">暂无结果</span></div><pre id="result" tabindex="0" data-nav aria-label="任务结果">任务结束后，结果会显示在这里。</pre><div class="actions"><button id="back-input" data-nav>返回输入</button><button id="read-result" data-nav>朗读结果</button><button id="stop-reading" data-nav>停止朗读</button></div><p class="small">朗读使用浏览器或系统语音，不会启动任务。原型未验证语音服务的离线行为。</p></section>
+  </main>
+  <footer>默认不保存网页草稿；刷新前请自行留存。真实任务由 Codex 及其服务处理，遵循其数据与日志设置。<span id="scan-status" role="status" class="small"></span></footer>
+</body></html>
