@@ -2,7 +2,7 @@ import http from 'node:http';
 import { readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { Session, BUSY } from './lib/session.mjs';
 import { cleanError } from './lib/codex.mjs';
 
@@ -43,7 +43,7 @@ export async function createServer({ port = 8782, sessionFactory = options => ne
       }
       const token = String(request.headers['x-client-token'] || url.searchParams.get('client') || '');
       const entry = clients.get(token);
-      if (!entry || !equal(token, [...clients.keys()].find(value => value === token) || '')) return json(401, { error: '页面连接已失效，请刷新；草稿可先复制保存。' });
+      if (!entry) return json(401, { error: '页面连接已失效，请刷新；草稿可先复制保存。' });
       entry.lastUse = Date.now();
       if (request.method === 'GET' && url.pathname === '/api/events') {
         if (entry.stream) return json(409, { error: '该页面已有状态连接。' });
@@ -104,7 +104,6 @@ export async function createServer({ port = 8782, sessionFactory = options => ne
   return { server, origin, workspace, close };
 }
 
-function equal(a, b) { return a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b)); }
 async function readBody(request) {
   let size = 0; const chunks = [];
   for await (const chunk of request) { size += chunk.length; if (size > 60000) throw new Error('请求过大。'); chunks.push(chunk); }
